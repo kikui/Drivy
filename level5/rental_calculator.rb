@@ -1,10 +1,15 @@
 class RentalCalculator
   DRIVY_COMMISSION = 0.3
-  INSURANCE_FEE = 0.5
-  ASSISTANCE_FEE = 100
+  INSURANCE_PERCENTAGE_FEE = 0.5
+  ASSISTANCE_PRICE_FEE = 100
+
   GPS_OPTION_PRICE = 500
   BABY_SEAT_OPTION_PRICE = 200
   ADDITIONAL_INSURANCE_OPTION_PRICE = 1000
+
+  DISCOUNT_50 = 0.5
+  DISCOUNT_30 = 0.7
+  DISCOUNT_10 = 0.9
 
   def initialize(rental, car, options)
     @rental = rental
@@ -21,11 +26,11 @@ class RentalCalculator
   end
 
   def insurance_fee
-    @insurance_fee ||= (commission * INSURANCE_FEE).to_i
+    @insurance_fee ||= (commission * INSURANCE_PERCENTAGE_FEE).to_i
   end
 
   def assistance_fee
-    @assistance_fee ||= (duration * ASSISTANCE_FEE).to_i
+    @assistance_fee ||= (duration * ASSISTANCE_PRICE_FEE).to_i
   end
 
   def drivy_fee
@@ -61,11 +66,11 @@ class RentalCalculator
     return 1 unless duration
 
     if duration > 10
-      0.5
+      DISCOUNT_50
     elsif duration > 4
-      0.7
+      DISCOUNT_30
     elsif duration > 1
-      0.9
+      DISCOUNT_10
     else
       1
     end
