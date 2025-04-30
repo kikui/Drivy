@@ -52,13 +52,13 @@ class RentalCalculator
   end
 
   def price_by_distance
-    distance = @rental["distance"].to_i || 0
-    price_per_km = @car["price_per_km"].to_i || 0
+    distance = @rental["distance"]&.to_i || 0
+    price_per_km = @car["price_per_km"]&.to_i || 0
     distance * price_per_km
   end
 
   def price_by_time
-    price_per_day = @car["price_per_day"].to_i || 0
+    price_per_day = @car["price_per_day"]&.to_i || 0
     duration * price_per_day * discount_percentage
   end
 
