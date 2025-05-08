@@ -1,64 +1,39 @@
 require 'json'
-require 'date'
-require_relative 'rental_calculator'
+require_relative 'seed'
+require_relative 'services/calculators/actors/amount'
 
 class Main
-  def initialize
-    hash = JSON.parse(File.read('data/input.json'))
-    @cars = hash['cars']
-    @rentals = hash['rentals']
-    @options = hash['options']
-    @output_data = []
+  attr_reader :seed
+
+  def initialize 
+    @seed = Seed.new
   end
 
   def call
-    @rentals.each do |rental|
-      car = @cars.find { |c| c['id'] == rental['car_id'] }
-      next unless car
+    output_data = []
+    seed.rentals.each do |rental|
+      raise StandardError, rental.errors unless rental.valid?
 
-      rental_options = @options.select { |option| option['rental_id'] == rental['id'] }
-      @output_data << { 
-        id: rental['id'],
-        options: rental_options.map { |option| option['type'] },
-        actions: generate_actors_actions(RentalCalculator.new(rental, car, rental_options))
+      car = seed.cars.find { |car| car.id == rental.car_id }
+      raise StandardError, car.errors unless car.valid?
+
+      options = seed.options.select { |option| option.rental_id == rental.id }
+      raise StandardError, options.map(&:errors).join(", ") unless options.all?(&:valid?)
+
+      output_data << {
+        id: rental.id,
+        options: options.map { |option| option.type },
+        actions: seed.actors
+          .each {  |actor| actor.amount = ::Calculators::Actors::Amount.new(rental: rental, car: car, options: options, actor: actor).call }
+          .map { |actor| actor.to_h }
       }
     end
 
     File.write('./data/output.json', JSON.pretty_generate({
-      rentals: @output_data
+      rentals: output_data
     }))
-  end
-
-  private
-
-  def generate_actors_actions(rental_calculator)
-    [
-      {
-        who: 'driver',
-        type: 'debit',
-        amount: rental_calculator.driver_price
-      },
-      {
-        who: 'owner',
-        type: 'credit',
-        amount: rental_calculator.owner_price
-      },
-      {
-        who: 'insurance',
-        type: 'credit',
-        amount: rental_calculator.insurance_fee
-      },
-      {
-        who: 'assistance',
-        type: 'credit',
-        amount: rental_calculator.assistance_fee
-      },
-      {
-        who: 'drivy',
-        type: 'credit',
-        amount: rental_calculator.drivy_fee
-      }
-    ]
+  rescue StandardError => error
+    puts error.message
   end
 end
 
