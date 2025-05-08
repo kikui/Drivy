@@ -42,8 +42,9 @@ class Main
 
   def price_by_time(car, rental)
     duration = (Date.parse(rental['end_date']) - Date.parse(rental['start_date'])).to_i + 1 || 0
-    price_per_day = car['price_per_day'].to_i || 0
-    (duration * price_per_day * calculate_discount_percentage(duration)).to_i
+    (1..duration).sum do |day|
+      (car['price_per_day'] * calculate_discount_percentage(day)).to_i
+    end
   end
 
   def calculate_discount_percentage(duration)

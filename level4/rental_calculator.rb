@@ -17,7 +17,7 @@ class RentalCalculator
   end
 
   def assistance_fee
-    @assistance_fee ||= (@duration * ASSISTANCE_FEE).to_i
+    @assistance_fee ||= (duration * ASSISTANCE_FEE).to_i
   end
 
   def drivy_fee
@@ -41,18 +41,19 @@ class RentalCalculator
   end
 
   def price_by_time
-    price_per_day = @car['price_per_day'].to_i || 0
-    duration * price_per_day * discount_percentage
+    (1..duration).sum do |day|
+      (@car['price_per_day'] * discount_percentage(day)).to_i
+    end
   end
 
-  def discount_percentage
-    return 1 unless duration
+  def discount_percentage(day)
+    return 1 unless day
 
-    if duration > 10
+    if day > 10
       0.5
-    elsif duration > 4
+    elsif day > 4
       0.7
-    elsif duration > 1
+    elsif day > 1
       0.9
     else
       1
